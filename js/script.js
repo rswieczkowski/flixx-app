@@ -243,12 +243,58 @@ async function search() {
   global.search.term = urlParams.get('search-term');
 
   if (global.search.term !== '' && global.search.type !== null) {
-    const results = await searchAPIData();
-    console.log(results);
+    const { results, totalPages, page } = await searchAPIData();
+
     // Make request and display results
+    if (results.length === 0) {
+      showAlert('No results found');
+      return;
+    } else {
+      dispalaySearchResults(results, global.search.type);
+      document.querySelector('#search-term').value = '';
+    }
   } else {
     showAlert('Please enter  a search term');
   }
+}
+
+//Display search results
+function dispalaySearchResults(results, type) {
+  const movie = type === 'movie';
+  results.forEach((result) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `
+  
+          <a href="${type}-details.html?id=${result.id}">
+          ${
+            result.poster_path
+              ? `<img
+            src="http://image.tmdb.org/t/p/w500${result.poster_path}"
+            class="card-img-top"
+            alt="${movie ? result.title : result.name}"
+          />`
+              : `<img
+          src="images/no-image.jpg"
+          class="card-img-top"
+          alt="${movie ? result.title : result.name}"
+        />`
+          }
+          </a>
+          <div class="card-body">
+            <h5 class="card-title">${movie ? result.title : result.name}</h5>
+            <p class="card-text">
+              <small class="text-muted">Release: ${
+                movie ? result.release_date : result.first_air_date
+              }</small>
+            </p>
+          </div>
+        </div>
+      </div>
+     
+  `;
+    document.querySelector('#search-results').appendChild(div);
+  });
 }
 
 //Display slider movies
@@ -374,7 +420,7 @@ function formatNumber(number) {
 }
 
 //Show error alert
-function showAlert(message, className) {
+function showAlert(message, className = 'error') {
   const alertEl = document.createElement('div');
   alertEl.classList.add('alert', className);
   alertEl.appendChild(document.createTextNode(message));
